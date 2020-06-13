@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": "C:\\ProgramData\\Miniconda3\\python.exe"
+    "python.pythonPath": "D:\\Programs\\miniconda3\\python.exe",
+    "python.linting.enabled": false,
+    "restructuredtext.confPath": "c:\\Users\\ayoub\\Documents\\Projects\\Other\\mitsuba2\\docs\\docs_api"
 }

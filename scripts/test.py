@@ -1,18 +1,23 @@
 import enoki as ek
 import mitsuba
+import os
 test = mitsuba.set_variant('gpu_autodiff_rgb')
 from mitsuba.core import Thread
 from mitsuba.core.xml import load_file
 from mitsuba.python.util import traverse
 
-# Load the Cornell Box
-Thread.thread().file_resolver().append('dist/python/dragon')
-scene = load_file('dist/python/dragon/dragon.xml')
+# Absolute or relative path to the XML file
+filename = 'scenes/cboxwithdragon/cboxwithdragon.xml'
+
+# Add the scene directory to the FileResolver's search path
+Thread.thread().file_resolver().append(os.path.dirname(filename))
+
+# Load the scene
+scene = load_file(filename)
 
 # Find differentiable scene parameters
 params = traverse(scene)
 print(params)
-
 params.keep(['red.reflectance.value','green.reflectance.value','light.reflectance.value'])
 
 from mitsuba.core import Color3f
