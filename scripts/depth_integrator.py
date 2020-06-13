@@ -4,13 +4,9 @@ import numpy as np
 import mitsuba
 
 # Set the desired mitsuba variant
-mitsuba.set_variant('gpu_autodiff_rgb')
-import mitsuba.core
+mitsuba.set_variant('packet_rgb')
 
-#print(mitsuba.core.__dict__.keys())
-#from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f
-from enoki.cuda_autodiff import UInt32, UInt64, Vector2f, Vector3f
-from enoki.cuda_autodiff import Float32 as Float
+from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f
 from mitsuba.core import Bitmap, Struct, Thread
 from mitsuba.core.xml import load_file
 from mitsuba.render import ImageBlock
@@ -36,7 +32,7 @@ spp = 32
 total_sample_count = ek.hprod(film_size) * spp
 
 if sampler.wavefront_size() != total_sample_count:
-    sampler.seed(UInt64.arange(total_sample_count))
+    sampler.seed(ek.arange(UInt64, total_sample_count))
 
 # Enumerate discrete sample & pixel indices, and uniformly sample
 # positions within each pixel.
@@ -80,8 +76,6 @@ block.put(pos, rays.wavelengths, Vector3f(result, result, result), 1)
 # Write out the result from the ImageBlock
 # Internally, ImageBlock stores values in XYZAW format
 # (color XYZ, alpha value A and weight W)
-
-
 xyzaw_np = np.array(block.data()).reshape([film_size[1], film_size[0], 5])
 
 # We then create a Bitmap from these values and save it out as EXR file

@@ -6,10 +6,21 @@ import mitsuba
 # Set the desired mitsuba variant
 mitsuba.set_variant('packet_rgb')
 
-from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f
+from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f, Ray3f
 from mitsuba.core import Bitmap, Struct, Thread
-from mitsuba.core.xml import load_file
+from mitsuba.core.xml import load_file, load_dict
 from mitsuba.render import ImageBlock
+from mitsuba.core.math import RayEpsilon, Infinity
+
+
+'''def ray_intersect_mesh(mesh, rays):
+    res = mesh.ray_intersect_triangle(0, rays)
+    for i in range(mesh.face_count()):
+        cur = mesh.ray_intersect_triangle(i, rays)
+        mask = ~res[0] & cur[0]
+        res[3][mask] = cur[3][mask]
+        res[0][mask] = True
+    return res'''
 
 # Absolute or relative path to the XML file
 filename = 'scenes/cboxwithdragon/cboxwithdragon.xml'
@@ -19,7 +30,12 @@ Thread.thread().file_resolver().append(os.path.dirname(filename))
 
 # Load the scene
 scene = load_file(filename)
-
+dragon = scene.shapes()[6]
+dummy_scene = load_dict({
+    "type" : "scene",
+    "dragon" : dragon,
+    "camera" : scene.sensors()[0]
+})
 
 # Instead of calling the scene's integrator, we build our own small integrator
 # This integrator simply computes the depth values per pixel
@@ -54,16 +70,10 @@ rays, weights = sensor.sample_ray_differential(
 )
 
 # Intersect rays with the scene geometry
-surface_interaction = scene.ray_intersect(rays)
+surface_interaction = dummy_scene.ray_intersect(rays)
 
-dragon_c = scene.shapes()[6].bbox().center()
-c = Vector3f(dragon_c)
-d = c - surface_interaction.p
-result = ek.norm(d)
-max_dist = ek.hmax(result)
-result /= max_dist
-result = 0.3*(1.0 - result**(2.0))
-
+result = surface_interaction.t + 1.0
+result[~(surface_interaction.t == Infinity)]=1
 result[~surface_interaction.is_valid()] = 0
 
 block = ImageBlock(
@@ -86,4 +96,4 @@ xyzaw_np = np.array(block.data()).reshape([film_size[1], film_size[0], 5])
 # We then create a Bitmap from these values and save it out as EXR file
 bmp = Bitmap(xyzaw_np, Bitmap.PixelFormat.XYZAW)
 bmp = bmp.convert(Bitmap.PixelFormat.RGBA, Struct.Type.Float32, srgb_gamma=False)
-bmp.write('distance.exr')
+bmp.write('binary.exr')

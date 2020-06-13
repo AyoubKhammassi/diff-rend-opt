@@ -4,4 +4,4 @@
 
 PYTHON_EXECUTABLE = r"D:\Programs\miniconda3\python.exe"
 MTS_DEFAULT_VARIANT = ''
-MTS_VARIANTS = ['scalar_rgb', 'gpu_autodiff_rgb']
+MTS_VARIANTS = ['scalar_rgb', 'gpu_autodiff_rgb', 'packet_rgb']
