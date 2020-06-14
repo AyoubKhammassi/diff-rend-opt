@@ -1,37 +1,19 @@
-import enoki as ek
-import mitsuba
-import os
 
-mitsuba.set_variant('scalar_rgb')
+#returns a dictionary containing an entry for each parameter parent (BSDF, Emitter), the value is a list of objects
+def get_owners(params, scene):
+    owners_ids = list(set(map(lambda x: x.split('.')[0], params.keys())))
 
-from mitsuba.core import Thread
-from mitsuba.core.xml import load_file
-from mitsuba.python.util import traverse, ParameterMap
+    #List of owners of parameters, can be shapes, bsdfs, emitters
+    owners = dict()
 
-# Absolute or relative path to the XML file
-filename = 'scenes/cboxwithdragon/cboxwithdragon.xml'
-
-# Add the scene directory to the FileResolver's search path
-Thread.thread().file_resolver().append(os.path.dirname(filename))
-
-# Load the scene
-scene = load_file(filename)
-
-params = traverse(scene)
-
-#List of owners of parameters, can be shapes, bsdfs, emitters and cameras
-owners = list(set(map(lambda x: x.split('.')[0], params.keys())))
-
-shapes = dict()
-emitters = dict()
-
-for o in owners:
-    shapes[o] = list()
-    for v in scene.shapes():
-        if v.bsdf().id() == o:
-            shapes[o].append(v)
-
-print(shapes)
+    for o in owners_ids:
+        owners[o] = list()
+        for v in scene.shapes():
+            if v.bsdf().id() == o:
+                owners[o].append(v)
+            if v.is_emitter() and v.emitter().id() == o:
+                owners[o].append(v)
+    return owners
 
 
 

@@ -4,7 +4,7 @@ import numpy as np
 import mitsuba
 
 # Set the desired mitsuba variant
-mitsuba.set_variant('packet_rgb')
+mitsuba.set_variant('gpu_autodiff_rgb')
 
 from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f, Ray3f
 from mitsuba.core import Bitmap, Struct, Thread
@@ -31,11 +31,17 @@ Thread.thread().file_resolver().append(os.path.dirname(filename))
 # Load the scene
 scene = load_file(filename)
 dragon = scene.shapes()[6]
-dummy_scene = load_dict({
-    "type" : "scene",
-    "dragon" : dragon,
-    "camera" : scene.sensors()[0]
-})
+shapes = dict()
+shapes["type"] = "scene"
+shapes["camera"] = scene.sensors()[0]
+#shapes[dragon.id()] = dragon
+shapes[scene.shapes()[4].id()] = scene.shapes()[4]
+
+
+print(shapes)
+
+dummy_scene = load_dict(shapes)
+
 
 # Instead of calling the scene's integrator, we build our own small integrator
 # This integrator simply computes the depth values per pixel
@@ -43,7 +49,7 @@ sensor = scene.sensors()[0]
 film = sensor.film()
 sampler = sensor.sampler()
 film_size = film.crop_size()
-spp = 32
+spp = 3
 
 # Seed the sampler
 total_sample_count = ek.hprod(film_size) * spp
@@ -76,24 +82,6 @@ result = surface_interaction.t + 1.0
 result[~(surface_interaction.t == Infinity)]=1
 result[~surface_interaction.is_valid()] = 0
 
-block = ImageBlock(
-    film.crop_size(),
-    channel_count=5,
-    filter=film.reconstruction_filter(),
-    border=False
-)
-block.clear()
-# ImageBlock expects RGB values (Array of size (n, 3))
-block.put(pos, rays.wavelengths, Vector3f(result, result, result), 1)
-
-# Write out the result from the ImageBlock
-# Internally, ImageBlock stores values in XYZAW format
-# (color XYZ, alpha value A and weight W)
-
-
-xyzaw_np = np.array(block.data()).reshape([film_size[1], film_size[0], 5])
-
-# We then create a Bitmap from these values and save it out as EXR file
-bmp = Bitmap(xyzaw_np, Bitmap.PixelFormat.XYZAW)
-bmp = bmp.convert(Bitmap.PixelFormat.RGBA, Struct.Type.Float32, srgb_gamma=False)
-bmp.write('binary.exr')
+from mitsuba.python.autodiff import render, write_bitmap
+crop_size = scene.sensors()[0].film().crop_size()
+write_bitmap('renders/green_bin_mask.png', result, crop_size)
