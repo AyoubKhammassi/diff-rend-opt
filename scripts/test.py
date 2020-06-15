@@ -48,24 +48,24 @@ mask_len = ek.hsum(masks['green'])[0]
 
 converged = False
 it = 0
-while converged != True:
+while converged != True and it <= 100:
     # Perform a differentiable rendering of the scene
     image = render(scene, optimizer=opt, unbiased=True, spp=1)
 
     #write_bitmap('render/out_%03i.png' % it, image, crop_size)
 
     # Objective: MSE between 'image' and 'image_ref'
-    ob_val1 = ek.hsum(ek.sqr(image - image_ref)) / len(image)
-    ob_val2 = ek.hsum( masks['green'] * ek.sqr(image - image_ref)) / len(image)
+    #ob_val = ek.hsum(ek.sqr(image - image_ref)) / len(image)
+    ob_val = ek.hsum( masks['green'] * ek.sqr(image - image_ref)) / mask_len
 
     # Back-propagate errors to input parameters
-    ek.backward(ob_val2)
+    ek.backward(ob_val)
 
     # Optimizer: take a gradient step
     opt.step()
 
     err_ref = ek.hsum(ek.sqr(green_ref - params['green.reflectance.value']))
-    if err_ref[0] < 0.0001:
-        converged = True
+    #if err_ref[0] < 0.0001:
+        #converged = True
     print('Iteration %03i: error=%g' % (it, err_ref[0]))
     it+=1

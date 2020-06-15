@@ -53,9 +53,10 @@ def generate_masks(owners, scene):
         #dummy_scene contains only camera and objects for associated with this owner
         dummy_scene = load_dict(scene_dict)
         surface_interaction = dummy_scene.ray_intersect(rays)
-
-        result = surface_interaction.t
-        result[~(surface_interaction.t == Infinity)]=1
+        
+        result = surface_interaction.t + 1.0
+        result[~(surface_interaction.t is Infinity)]=1
         result[~surface_interaction.is_valid()] = 0
+
         masks[key] = result
     return masks
