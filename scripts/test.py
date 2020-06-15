@@ -67,5 +67,5 @@ while converged != True and it <= 100:
     err_ref = ek.hsum(ek.sqr(green_ref - params['green.reflectance.value']))
     #if err_ref[0] < 0.0001:
         #converged = True
-    print('Iteration %03i: error=%g' % (it, err_ref[0]))
+    print('Iteration %03i : error= %g' % (it, err_ref[0]))
     it+=1
