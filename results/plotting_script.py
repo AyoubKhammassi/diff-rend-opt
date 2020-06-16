@@ -21,7 +21,11 @@ def parse(resultsFile):
 classicResults = parse('ClassicResults.txt')
 maskResults    = parse('MaskResults.txt')
 
-plt.figure(figsize=(40,40))
+for i in range(1,len(classicResults[0])):
+    classicResults[1][i] = classicResults[1][i]*i*i
+    maskResults[1][i] = maskResults[1][i]*i*i
+
+plt.figure(figsize=(10,10))
 plt.plot(classicResults[0], classicResults[1] ,label='classic results')
 plt.plot(maskResults[0], maskResults[1] ,label='mask results')
 
