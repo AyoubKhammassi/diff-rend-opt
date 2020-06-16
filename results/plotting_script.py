@@ -28,6 +28,7 @@ for i in range(1,len(classicResults[0])):
 plt.figure(figsize=(10,10))
 plt.plot(classicResults[0], classicResults[1] ,label='classic results')
 plt.plot(maskResults[0], maskResults[1] ,label='mask results')
+plt.legend(loc="upper left")
 
 
 plt.ylabel('error')
