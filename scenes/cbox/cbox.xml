@@ -16,11 +16,11 @@
                     up    ="  0,   1,    0"/>
         </transform>
         <sampler type="independent">  <!-- ldsampler -->
-            <integer name="sample_count" value="128"/>
+            <integer name="sample_count" value="32"/>
         </sampler>
         <film type="hdrfilm">
-            <integer name="width" value="256"/>
-            <integer name="height" value="256"/>
+            <integer name="width" value="512"/>
+            <integer name="height" value="512"/>
             <rfilter type="gaussian"/>
         </film>
     </sensor>
@@ -73,8 +73,8 @@
         <string name="filename" value="meshes/cbox_smallbox.obj"/>
         <ref id="box"/>
     </shape>
-    <shape type="obj">
+    <!--<shape type="obj">
         <string name="filename" value="meshes/cbox_largebox.obj"/>
         <ref id="box"/>
-    </shape>
+    </shape>-->
 </scene>

@@ -2,7 +2,7 @@
 
 <scene version="0.4.0">
 	<integrator type="path">
-    	<integer name="max_depth" value="4"/>
+    	<integer name="max_depth" value="6"/>
 	</integrator>
 
 	<sensor type="perspective">
@@ -48,6 +48,9 @@
 		<spectrum name="reflectance" value="400:0.78, 500:0.78, 600:0.78, 700:0.78"/>
 	</bsdf>
 
+	<emitter type="area" id ="emitter">
+			<spectrum name="radiance" value="400:0, 500:8, 600:15.6, 700:18.4"/>
+	</emitter>
 	<shape type="obj">
 		<string name="filename" value="../../meshes/cbox_luminaire.obj"/>
 		<transform name="toWorld">
@@ -55,10 +58,8 @@
 		</transform>
 
 		<ref id="light"/>
+		<ref id="emitter"/>
 
-		<emitter type="area">
-			<spectrum name="radiance" value="400:0, 500:8, 600:15.6, 700:18.4"/>
-		</emitter>
 	</shape>
 
 	<shape type="obj">
@@ -71,6 +72,7 @@
 		<string name="filename" value="../../meshes/cbox_ceiling.obj"/>
 
 		<ref id="white"/>
+
 	</shape>
 
 	<shape type="obj">
@@ -95,8 +97,10 @@
 		<string name="filename" value="../../meshes/dragon.obj"/>
 		<transform name="toWorld">
 			<translate x="50.0" y="0" z="-10.0"/>
+
 		</transform>
 		<ref id="dragon"/>
+
 	</shape>
 
 </scene>

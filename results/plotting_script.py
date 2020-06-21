@@ -1,35 +1,22 @@
 import matplotlib.pyplot as plt
-
-#Parses the output file and returns a matrix with error values
-def parse(resultsFile):
-    
-    results = open(resultsFile)
-    resultLines = results.readlines()
-
-    iteration = []
-    error = []
-
-    for line in resultLines:
-        words = line.split(" ")
-        iteration.append(int(words[1]))
-        error.append(float(words[4].strip('\n')))
-        
-    results = [iteration, error]
-    return results
+import json
 
 
-classicResults = parse('ClassicResults.txt')
-maskResults    = parse('MaskResults.txt')
+base_path = 'results/EmitterSmall/'
+stdf = open(base_path+'Standard/Errors.txt', 'r')
+maskedf = open(base_path+'Masked/Errors.txt', 'r')
+stdResults = json.load(stdf)
+maskResults = json.load(maskedf)
 
 
-plt.figure(figsize=(10,10))
-plt.plot(classicResults[0], classicResults[1] ,label='classic results')
-plt.plot(maskResults[0], maskResults[1] ,label='mask results')
-plt.legend(loc="upper left")
+#plt.figure(figsize=(10,10))
+plt.plot(stdResults)
+plt.plot(maskResults)
 #logarithmic scale
-plt.yscale('log')
+#plt.yscale('log')
 
 
 plt.ylabel('error')
-plt.xlabel('iterations')
-plt.show()
+plt.xlabel('iteration')
+#plt.show()
+plt.savefig(base_path+'plot')
