@@ -1,5 +1,4 @@
 *.exr
-*.png
 
 .vscode
 *.code-workspace
