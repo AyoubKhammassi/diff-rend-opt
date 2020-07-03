@@ -1,3 +1,10 @@
+'''
+Experimenting script for creating a binary mask integrator
+First try was to get the shape from each intersection point, but pybind fails to cast the shape pointer to a valid python type
+Second thing we tried is instead of testing rays intersection on the whole scene, we only test against the shape we're intersetd in, but shape doesn't implement the ray_intersect function
+We ended up using a workaround, we take the sensor and the objects that we're interested in and we place them in a new dummy scene, then we test ray intersection against that scene
+'''
+
 import os
 import enoki as ek
 import numpy as np
@@ -13,15 +20,6 @@ from mitsuba.render import ImageBlock
 from mitsuba.core.math import RayEpsilon, Infinity
 
 
-'''def ray_intersect_mesh(mesh, rays):
-    res = mesh.ray_intersect_triangle(0, rays)
-    for i in range(mesh.face_count()):
-        cur = mesh.ray_intersect_triangle(i, rays)
-        mask = ~res[0] & cur[0]
-        res[3][mask] = cur[3][mask]
-        res[0][mask] = True
-    return res'''
-
 # Absolute or relative path to the XML file
 filename = 'scenes/cboxwithdragon/cboxwithdragon.xml'
 
@@ -31,20 +29,19 @@ Thread.thread().file_resolver().append(os.path.dirname(filename))
 # Load the scene
 scene = load_file(filename)
 dragon = scene.shapes()[6]
+
+#Create the scene dict for the dummy scene
 shapes = dict()
 shapes["type"] = "scene"
 shapes["camera"] = scene.sensors()[0]
 #shapes[dragon.id()] = dragon
 shapes[scene.shapes()[4].id()] = scene.shapes()[4]
 
-
-print(shapes)
-
+#Load the dummy scene
 dummy_scene = load_dict(shapes)
 
 
-# Instead of calling the scene's integrator, we build our own small integrator
-# This integrator simply computes the depth values per pixel
+#The custom integrator
 sensor = scene.sensors()[0]
 film = sensor.film()
 sampler = sensor.sampler()
@@ -75,13 +72,13 @@ rays, weights = sensor.sample_ray_differential(
     sample3=0
 )
 
-# Intersect rays with the scene geometry
+# Intersect rays with the dummy scene geometry
 surface_interaction = dummy_scene.ray_intersect(rays)
 
 result = surface_interaction.t + 1.0
 result[~(surface_interaction.t == Infinity)]=1
 result[~surface_interaction.is_valid()] = 0
 
-from mitsuba.python.autodiff import render, write_bitmap
+from mitsuba.python.autodiff import write_bitmap
 crop_size = scene.sensors()[0].film().crop_size()
 write_bitmap('renders/green_bin_mask.png', result, crop_size)

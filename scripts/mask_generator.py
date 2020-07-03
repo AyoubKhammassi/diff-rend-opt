@@ -8,7 +8,8 @@ from mitsuba.core import Float, UInt32, UInt64, Vector2f, Vector3f, Ray3f
 from mitsuba.core.xml import load_dict
 from mitsuba.core.math import Infinity
 
-
+#Giving a scene and a list of paramters owners, this functions returns a dictionary of binary masks
+#For each parameters owner, a binary mask is generated
 def generate_masks(owners, scene):
     #Generate rays that are used for both the binary mask and the distance mask
     sensor = scene.sensors()[0]
@@ -41,7 +42,7 @@ def generate_masks(owners, scene):
         sample3=0
     )
 
-    #Masks dictionary containas a mask for each params
+    #Masks dictionary containas a mask for each parameter owner
     masks = dict()
     #For each parameter owner, we generate a mask
     for key in owners:
@@ -54,6 +55,7 @@ def generate_masks(owners, scene):
         dummy_scene = load_dict(scene_dict)
         surface_interaction = dummy_scene.ray_intersect(rays)
         
+        #Pixels with valid and finite rays are filled with 1, the rest is 0
         result = surface_interaction.t + 1.0
         result[~(surface_interaction.t is Infinity)]=1
         result[~surface_interaction.is_valid()] = 0

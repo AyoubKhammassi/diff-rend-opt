@@ -1,3 +1,9 @@
+'''
+Experimenting script for creating a distance map
+This is useful for point emitters that don't cover any surface on the image
+Instead of calculating a binary mask, we create a distance map from all the intersection points to the emitter's position
+We normalize that distance and then we inverse it, that way the map stores non uniform weights, for how much each pixel is affected by the parameter changes of that emitter
+'''
 import os
 import enoki as ek
 import numpy as np
@@ -21,13 +27,12 @@ Thread.thread().file_resolver().append(os.path.dirname(filename))
 scene = load_file(filename)
 
 
-# Instead of calling the scene's integrator, we build our own small integrator
-# This integrator simply computes the depth values per pixel
+# The custom integrator
 sensor = scene.sensors()[0]
 film = sensor.film()
 sampler = sensor.sampler()
 film_size = film.crop_size()
-spp = 32
+spp = 3
 
 # Seed the sampler
 total_sample_count = ek.hprod(film_size) * spp
@@ -56,34 +61,20 @@ rays, weights = sensor.sample_ray_differential(
 # Intersect rays with the scene geometry
 surface_interaction = scene.ray_intersect(rays)
 
+#We're using the dragon center as an example here
 dragon_c = scene.shapes()[6].bbox().center()
 c = Vector3f(dragon_c)
 d = c - surface_interaction.p
 result = ek.norm(d)
-max_dist = ek.hmax(result)
-result /= max_dist
-result = 0.3*(1.0 - result**(2.0))
-
+#Eliminate non valid intersection points
 result[~surface_interaction.is_valid()] = 0
 
-block = ImageBlock(
-    film.crop_size(),
-    channel_count=5,
-    filter=film.reconstruction_filter(),
-    border=False
-)
-block.clear()
-# ImageBlock expects RGB values (Array of size (n, 3))
-block.put(pos, rays.wavelengths, Vector3f(result, result, result), 1)
-
-# Write out the result from the ImageBlock
-# Internally, ImageBlock stores values in XYZAW format
-# (color XYZ, alpha value A and weight W)
+#We divide all distances by the maximum distance to normalize
+max_dist = ek.hmax(result)
+result /= max_dist
+result = (1.0 - result)
 
 
-xyzaw_np = np.array(block.data()).reshape([film_size[1], film_size[0], 5])
-
-# We then create a Bitmap from these values and save it out as EXR file
-bmp = Bitmap(xyzaw_np, Bitmap.PixelFormat.XYZAW)
-bmp = bmp.convert(Bitmap.PixelFormat.RGBA, Struct.Type.Float32, srgb_gamma=False)
-bmp.write('distance.exr')
+from mitsuba.python.autodiff import write_bitmap
+crop_size = scene.sensors()[0].film().crop_size()
+write_bitmap('renders/green_dist_map.png', result, crop_size)
